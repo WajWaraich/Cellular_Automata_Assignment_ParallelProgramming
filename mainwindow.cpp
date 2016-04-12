@@ -20,14 +20,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     initialisation();
 
+    generationCounter = 0;
+
     timerControl = new QTimer(this);
     connect(timerControl,SIGNAL(timeout()),this,SLOT(updateGUI()));
-    timerControl->start(2000);
+    timerControl->start(20);
 }
 
 void MainWindow::initialisation(){
 
-    int cells[M][N];
+    //cells[M][N]; //might need to add "int" before deceleration
     int tempCells[M*N];
 
     int counterForFishes = 0;
@@ -74,53 +76,48 @@ void MainWindow::initialisation(){
         cells[i / N][i % N] = tempCells[i];
     }
 
-
-    matImage = Mat(M,N, CV_8UC3 ,&cells); //CV_16UC1 worked well but didn't show stuff with other intensities, CV_32S works well, will need to try CV_8UC3
-
     matImageColourConversion();
 }
 
 void MainWindow::matImageColourConversion(){
-    for (int i=0; i<N; i++){
-        for(int j=0; j<M; j++){
 
-            Vec3b pixValue = matImage.at<Vec3b>(Point(i,j));
+    matImage = Mat(M,N, CV_8UC3 ,&cells); //CV_16UC1 worked well but didn't show stuff with other intensities, CV_32S works well, will need to try CV_8UC3
 
-            //            qDebug() << "pixValue[0]" << pixValue[0];
-            //            qDebug() << "pixValue[1]" << pixValue[1];
-            //            qDebug() << "pixValue[2]" << pixValue[2];
-            //            qDebug() << "--------------------------------";
+    for (int i=0; i<M; i++){
+        for(int j=0; j<N; j++){
 
+            //black = shark
+            //green = fish
+            //white = ocean
 
-            if(pixValue[0]==255 || pixValue[1]==255 || pixValue[2]==255){
+            if(cells[i][j]<0){
                 cv::Vec3b yellow;
                 yellow[0] = 0;
-                yellow[1] = 255;
-                yellow[2] = 255;
-                matImage.at<cv::Vec3b>(cv::Point(i,j)) = yellow;
+                yellow[1] = 0;
+                yellow[2] = 0;
+                matImage.at<cv::Vec3b>(cv::Point(j,i)) = yellow;
             }
 
-            else if(pixValue[0]==100 || pixValue[1]==100 || pixValue[2]==100){
+            else if(cells[i][j]>0){
                 cv::Vec3b red;
                 red[0] = 0;
-                red[1] = 0;
-                red[2] = 255;
-                matImage.at<cv::Vec3b>(cv::Point(i,j)) = red;
+                red[1] = 255;
+                red[2] = 0;
+                matImage.at<cv::Vec3b>(cv::Point(j,i)) = red;
             }
 
-            else if(pixValue[0]==0 || pixValue[1]==0 || pixValue[2]==0){
+            else if(cells[i][j]==0){
                 cv::Vec3b blue;
                 blue[0] = 255;
-                blue[1] = 0;
-                blue[2] = 0;
-                matImage.at<cv::Vec3b>(cv::Point(i,j)) = blue;
+                blue[1] = 255;
+                blue[2] = 255;
+                matImage.at<cv::Vec3b>(cv::Point(j,i)) = blue;
             }
         }
     }
 }
 
 void MainWindow::updateGUI(){
-
     int previousGenerationCells[M][N];
     //copy(begin(cells), end(cells), begin(previousGenerationCells));
     //qDebug()<< sizeof(cells);
@@ -129,6 +126,17 @@ void MainWindow::updateGUI(){
 
     for(int i=0; i<M; i++){
         for(int j=0; j<N; j++){
+
+//--------------MADE THE PROGRAM VERY SLOW!------------------------------------
+//            std::random_device rd; // obtain a random number from hardware
+//            std::mt19937 eng(rd()); // seed the generator
+//            std::uniform_int_distribution<> distr(1, 32); // define the range
+
+//            for(int n=1; n<33; ++n)
+//                std::cout << distr(eng) << ' '; // generate numbers
+
+            int content = cells[i][j];
+
             if(i!=0 || i!=M-1 || j!=0 || j!=N-1){
                 int fishCounter = 0;
                 int sharkCounter = 0;
@@ -200,11 +208,33 @@ void MainWindow::updateGUI(){
                         cells[i][j] = -1;
                     }
                 }
+
+                else if(previousGenerationCells[i][j]==11){
+                    cells[i][j] = 0;
+                }
+
+                else if(abs(previousGenerationCells[i][j])==21){
+                    cells[i][j] = 0;
+                }
+
+                //For random killing of the shark
+                /*else if(previousGenerationCells[i][j]<0 && distr(eng)==1){
+                    cells[i][j] = 0;
+                }*/
+
+                else if(previousGenerationCells[i][j]<0 && sharkCounter>=6 && fishCounter==0){
+                    cells[i][j] = 0;
+                }
+
+                else if(previousGenerationCells[i][j]>0 && sharkCounter>=5 || fishCounter==8){
+                    cells[i][j] = 0;
+                }
+
                 else if(previousGenerationCells[i][j]>0){
-                    cells[i][j] = (cells[i][j])+1;
+                    cells[i][j] = content+1;
                 }
                 else if(previousGenerationCells[i][j]<0){
-                    cells[i][j] = (cells[i][j])-1;
+                    cells[i][j] = content-1;
                 }
             }
         }
@@ -223,6 +253,10 @@ void MainWindow::updateGUI(){
     ui->label->setPixmap(QPixmap::fromImage(image));
 
     //image.save("X:\\Dropbox\\University Work\\Real Time Programming\\Week 2\\build-GameOfLife-Desktop_Qt_5_5_1_MSVC2012_32bit-Debug\\QImageSAVE.jpg","JPG",-1);
+
+    generationCounter++;
+
+    this->ui->lcdNumber->display(generationCounter);
 }
 
 MainWindow::~MainWindow()
