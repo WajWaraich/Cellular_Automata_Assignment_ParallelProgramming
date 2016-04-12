@@ -37,7 +37,6 @@ private slots:
     void matImageColourConversion();
 
 private:
-//    int cells[][];
     QTimer* timerControl;
 
     static const int M = 700;
@@ -46,7 +45,6 @@ private:
     int cells[M][N];
 
     cv::Mat matImage;
-
 
     Ui::MainWindow *ui;
 
