@@ -46,6 +46,8 @@ private:
 
     cv::Mat matImage;
 
+    int generationCounter;
+
     Ui::MainWindow *ui;
 
 };
