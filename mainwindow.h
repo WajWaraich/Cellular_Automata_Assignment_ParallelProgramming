@@ -39,8 +39,8 @@ private slots:
 private:
     QTimer* timerControl;
 
-    static const int M = 700;
-    static const int N = 1400;
+    static const int M = 800;
+    static const int N = 900;
 
     int cells[M][N];
 

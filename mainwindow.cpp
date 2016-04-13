@@ -29,6 +29,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::initialisation(){
 
+    this->ui->label->size().setHeight(M);
+    this->ui->label->size().setWidth(N);
+
     //cells[M][N]; //might need to add "int" before deceleration
     int tempCells[M*N];
 
@@ -40,8 +43,6 @@ void MainWindow::initialisation(){
     int thresholdForSharks = (M*N)*0.25;
     int thresholdForOcean = (M*N)*0.25;
 
-
-
     for(int j=0; j<=M; j++) {
         for(int k=0; k<=N; k++) {
 
@@ -49,22 +50,25 @@ void MainWindow::initialisation(){
                 cells[j][k] = 1;
                 counterForFishes++;
             }
-            if(counterForSharks<thresholdForSharks && counterForFishes==thresholdForFishes){
+            else if(counterForSharks<thresholdForSharks && counterForFishes==thresholdForFishes){
                 cells[j][k] = -1;
                 counterForSharks++;
             }
-            if(counterForOcean<thresholdForOcean && counterForSharks==thresholdForSharks && counterForFishes==thresholdForFishes){
+            else if(counterForOcean<thresholdForOcean && counterForSharks==thresholdForSharks && counterForFishes==thresholdForFishes){
                 cells[j][k] = 0;
                 counterForOcean++;
             }
         }
     }
 
+    //    qDebug() << "counterForFishes: " << counterForFishes;
+    //    qDebug() << "counterForSharks: " << counterForSharks;
+    //    qDebug() << "counterForOcean: " << counterForOcean;
+
     for(int i=0; i<=M; i++){
         for(int j=0; j<=N; j++) {
             tempCells[i * M + j] = cells[i][j];
         }
-
     }
 
 
@@ -115,6 +119,8 @@ void MainWindow::matImageColourConversion(){
             }
         }
     }
+    QImage image((uchar*)matImage.data, matImage.cols, matImage.rows, matImage.step, QImage::Format_RGB888); //Format_RGB888 or Format_Indexed8
+    ui->label->setPixmap(QPixmap::fromImage(image));
 }
 
 void MainWindow::updateGUI(){
@@ -127,41 +133,60 @@ void MainWindow::updateGUI(){
     for(int i=0; i<M; i++){
         for(int j=0; j<N; j++){
 
-//--------------MADE THE PROGRAM VERY SLOW!------------------------------------
-//            std::random_device rd; // obtain a random number from hardware
-//            std::mt19937 eng(rd()); // seed the generator
-//            std::uniform_int_distribution<> distr(1, 32); // define the range
+            //--------------MADE THE PROGRAM VERY SLOW!------------------------------------
+            //            std::random_device rd; // obtain a random number from hardware
+            //            std::mt19937 eng(rd()); // seed the generator
+            //            std::uniform_int_distribution<> distr(1, 32); // define the range
 
-//            for(int n=1; n<33; ++n)
-//                std::cout << distr(eng) << ' '; // generate numbers
+            //            for(int n=1; n<33; ++n)
+            //                std::cout << distr(eng) << ' '; // generate numbers
 
             int content = cells[i][j];
 
-            if(i!=0 || i!=M-1 || j!=0 || j!=N-1){
-                int fishCounter = 0;
-                int sharkCounter = 0;
 
-                int fishBreedingAge = 0;
-                int sharkBreedingAge = 0;
 
-                if(previousGenerationCells[i][j]==0){
+            //-------------------I NEED TO COUNT THESE VARIABLES EVEN WHEN THERE'S A FISH THERE!------------------
+
+            int fishCounter = 0;
+            int sharkCounter = 0;
+
+            int fishBreedingAge = 0;
+            int sharkBreedingAge = 0;
+
+
+
+            if(i==0 || i==M-1 || j==0 || j==N-1){
+                int forSubbingPurposes1;
+                int forSubbingPurposes2;
+
+                int i_tempValueUsedForSubing;
+                int j_tempValueUsedForSubing;
+
+                if(i==0 || i==M-1){
+
+                    if(i==0){
+                        forSubbingPurposes1 = M-1;
+                        forSubbingPurposes2 = 1;
+                    }
+                    else if(i==(M-1)){
+                        forSubbingPurposes1 = -(M-1);
+                        forSubbingPurposes2 = -1;
+                    }
+
                     for(int k=0; k<8; k++){
-
-                        int i_tempValueUsedForSubing;
-                        int j_tempValueUsedForSubing;
 
                         switch(k){
 
                         case 0:
-                            i_tempValueUsedForSubing = -1;
+                            i_tempValueUsedForSubing = forSubbingPurposes1;
                             j_tempValueUsedForSubing = -1;
                             break;
                         case 1:
-                            i_tempValueUsedForSubing = -1;
+                            i_tempValueUsedForSubing = forSubbingPurposes1;
                             j_tempValueUsedForSubing = 0;
                             break;
                         case 2:
-                            i_tempValueUsedForSubing = -1;
+                            i_tempValueUsedForSubing = forSubbingPurposes1;
                             j_tempValueUsedForSubing = 1;
                             break;
                         case 3:
@@ -173,70 +198,184 @@ void MainWindow::updateGUI(){
                             j_tempValueUsedForSubing = 1;
                             break;
                         case 5:
-                            i_tempValueUsedForSubing = 1;
+                            i_tempValueUsedForSubing = forSubbingPurposes2;
                             j_tempValueUsedForSubing = -1;
                             break;
                         case 6:
-                            i_tempValueUsedForSubing = 1;
+                            i_tempValueUsedForSubing = forSubbingPurposes2;
                             j_tempValueUsedForSubing = 0;
                             break;
                         case 7:
-                            i_tempValueUsedForSubing = 1;
+                            i_tempValueUsedForSubing = forSubbingPurposes2;
                             j_tempValueUsedForSubing = 1;
                             break;
                         }
+                    }
+                }
 
-                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>0){
-                            fishCounter++;
-                            if(previousGenerationCells[i-1][j-1]>=3){
-                                fishBreedingAge++;
-                            }
+                else{
+                    if(j==0){
+                        forSubbingPurposes1 = N-1;
+                        forSubbingPurposes2 = 1;
+                    }
+                    else if(j==(N-1)){
+                        forSubbingPurposes1 = -(N-1);
+                        forSubbingPurposes2 = -1;
+                    }
+
+                    for(int k=0; k<8; k++){
+
+                        switch(k){
+
+                        case 0:
+                            i_tempValueUsedForSubing = -1;
+                            j_tempValueUsedForSubing = forSubbingPurposes1;
+                            break;
+                        case 1:
+                            i_tempValueUsedForSubing = 0;
+                            j_tempValueUsedForSubing = forSubbingPurposes1;
+                            break;
+                        case 2:
+                            i_tempValueUsedForSubing = 1;
+                            j_tempValueUsedForSubing = forSubbingPurposes1;
+                            break;
+                        case 3:
+                            i_tempValueUsedForSubing = -1;
+                            j_tempValueUsedForSubing = 0;
+                            break;
+                        case 4:
+                            i_tempValueUsedForSubing = 1;
+                            j_tempValueUsedForSubing = 0;
+                            break;
+                        case 5:
+                            i_tempValueUsedForSubing = -1;
+                            j_tempValueUsedForSubing = forSubbingPurposes2;
+                            break;
+                        case 6:
+                            i_tempValueUsedForSubing = 0;
+                            j_tempValueUsedForSubing = forSubbingPurposes2;
+                            break;
+                        case 7:
+                            i_tempValueUsedForSubing = 1;
+                            j_tempValueUsedForSubing = forSubbingPurposes2;
+                            break;
                         }
+                    }
 
-                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<0){
-                            sharkCounter++;
-                            if(previousGenerationCells[i-1][j-1]<=4){
-                                sharkBreedingAge++;
-                            }
+                }
+
+                if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>0){
+                    fishCounter++;
+                    if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>=3){
+                        fishBreedingAge++;
+                    }
+                }
+
+                if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<0){
+                    sharkCounter++;
+                    if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<=4){
+                        sharkBreedingAge++;
+                    }
+                }
+
+            }
+
+            else{
+                for(int k=0; k<8; k++){
+
+                    int i_tempValueUsedForSubing;
+                    int j_tempValueUsedForSubing;
+
+                    switch(k){
+
+                    case 0:
+                        i_tempValueUsedForSubing = -1;
+                        j_tempValueUsedForSubing = -1;
+                        break;
+                    case 1:
+                        i_tempValueUsedForSubing = -1;
+                        j_tempValueUsedForSubing = 0;
+                        break;
+                    case 2:
+                        i_tempValueUsedForSubing = -1;
+                        j_tempValueUsedForSubing = 1;
+                        break;
+                    case 3:
+                        i_tempValueUsedForSubing = 0;
+                        j_tempValueUsedForSubing = -1;
+                        break;
+                    case 4:
+                        i_tempValueUsedForSubing = 0;
+                        j_tempValueUsedForSubing = 1;
+                        break;
+                    case 5:
+                        i_tempValueUsedForSubing = 1;
+                        j_tempValueUsedForSubing = -1;
+                        break;
+                    case 6:
+                        i_tempValueUsedForSubing = 1;
+                        j_tempValueUsedForSubing = 0;
+                        break;
+                    case 7:
+                        i_tempValueUsedForSubing = 1;
+                        j_tempValueUsedForSubing = 1;
+                        break;
+                    }
+
+                    if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>0){
+                        fishCounter++;
+                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>=3){
+                            fishBreedingAge++;
                         }
                     }
 
-                    if(fishCounter>=4 && fishBreedingAge>=3 && sharkCounter<4){
-                        cells[i][j] = 1;
+                    if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<0){
+                        sharkCounter++;
+                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<=4){
+                            sharkBreedingAge++;
+                        }
                     }
-                    if(sharkCounter>=4 && sharkBreedingAge>=3 && fishCounter<4){
-                        cells[i][j] = -1;
-                    }
-                }
-
-                else if(previousGenerationCells[i][j]==11){
-                    cells[i][j] = 0;
-                }
-
-                else if(abs(previousGenerationCells[i][j])==21){
-                    cells[i][j] = 0;
-                }
-
-                //For random killing of the shark
-                /*else if(previousGenerationCells[i][j]<0 && distr(eng)==1){
-                    cells[i][j] = 0;
-                }*/
-
-                else if(previousGenerationCells[i][j]<0 && sharkCounter>=6 && fishCounter==0){
-                    cells[i][j] = 0;
-                }
-
-                else if(previousGenerationCells[i][j]>0 && sharkCounter>=5 || fishCounter==8){
-                    cells[i][j] = 0;
-                }
-
-                else if(previousGenerationCells[i][j]>0){
-                    cells[i][j] = content+1;
-                }
-                else if(previousGenerationCells[i][j]<0){
-                    cells[i][j] = content-1;
                 }
             }
+
+            if(previousGenerationCells[i][j]==0){
+
+                if(fishCounter>=4 && fishBreedingAge>=3 && sharkCounter<4){
+                    cells[i][j] = 1;
+                }
+                if(sharkCounter>=4 && sharkBreedingAge>=3 && fishCounter<4){
+                    cells[i][j] = -1;
+                }
+            }
+
+            else if(previousGenerationCells[i][j]==11){
+                cells[i][j] = 0;
+            }
+
+            else if(abs(previousGenerationCells[i][j])==21){
+                cells[i][j] = 0;
+            }
+
+            else if(previousGenerationCells[i][j]<0 && sharkCounter>=6 && fishCounter==0){
+                cells[i][j] = 0;
+            }
+
+            else if(previousGenerationCells[i][j]>0 && sharkCounter>=5 || fishCounter==8){
+                cells[i][j] = 0;
+            }
+
+            //                //For random killing of the shark
+            //                else if(previousGenerationCells[i][j]<0 && distr(eng)==1){
+            //                    cells[i][j] = 0;
+            //                }
+
+            else if(previousGenerationCells[i][j]>0){
+                cells[i][j] = content+1;
+            }
+            else if(previousGenerationCells[i][j]<0){
+                cells[i][j] = content-1;
+            }
+
         }
     }
 
@@ -244,8 +383,8 @@ void MainWindow::updateGUI(){
 
     //imwrite("test.jpg",matImage);
 
-    namedWindow("test");
-    imshow("test",matImage);
+    //    namedWindow("test");
+    //    imshow("test",matImage);
 
     //imshow("test2",imread("test.jpg"));
 
