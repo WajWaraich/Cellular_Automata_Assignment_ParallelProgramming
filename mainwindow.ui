@@ -15,7 +15,20 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+    <item row="0" column="3">
+     <widget class="QLCDNumber" name="lcdNumber"/>
+    </item>
+    <item row="2" column="3">
+     <widget class="QLCDNumber" name="lcdNumber_2"/>
+    </item>
+    <item row="1" column="3">
+     <widget class="QRadioButton" name="radioButton">
+      <property name="text">
+       <string>display on/off</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" rowspan="3">
      <widget class="QLabel" name="label">
       <property name="autoFillBackground">
        <bool>true</bool>
@@ -24,9 +37,6 @@
        <string/>
       </property>
      </widget>
-    </item>
-    <item row="0" column="1">
-     <widget class="QLCDNumber" name="lcdNumber"/>
     </item>
    </layout>
   </widget>

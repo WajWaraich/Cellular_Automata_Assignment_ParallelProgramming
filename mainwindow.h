@@ -9,6 +9,8 @@
 #include <opencv2/core/utility.hpp>
 #include "opencv2/videoio.hpp"
 
+#include <omp.h>
+
 #include <iostream>
 #include <string>
 #include <QtCore>
@@ -29,6 +31,7 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+
 public slots:
     void updateGUI();
 
@@ -39,10 +42,12 @@ private slots:
 private:
     QTimer* timerControl;
 
-    static const int M = 800;
-    static const int N = 900;
+    static const int M = 300; //300 | 700 | 800 | 1400 | 1800
+    static const int N = 302; //400 | 1400 | 850 | 1402 | 1802
 
     int cells[M][N];
+
+    QTime timer;
 
     cv::Mat matImage;
 

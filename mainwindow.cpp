@@ -12,6 +12,7 @@
 using namespace std;
 using namespace cv;
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -24,14 +25,19 @@ MainWindow::MainWindow(QWidget *parent) :
 
     timerControl = new QTimer(this);
     connect(timerControl,SIGNAL(timeout()),this,SLOT(updateGUI()));
-    timerControl->start(20);
+    timerControl->start(0);
 }
 
 void MainWindow::initialisation(){
 
-    this->ui->label->size().setHeight(M);
-    this->ui->label->size().setWidth(N);
+    timer.start();
 
+    this->ui->radioButton->setChecked(true);
+
+//    if(this->ui->radioButton->isChecked()){
+//        this->ui->label->size().setHeight(M);
+//        this->ui->label->size().setWidth(N);
+//    }
     //cells[M][N]; //might need to add "int" before deceleration
     int tempCells[M*N];
 
@@ -72,6 +78,23 @@ void MainWindow::initialisation(){
     }
 
 
+
+    //        int randNumber;
+
+    //        for(int i=0;i<M-1;i++){
+    //            for(int j =0;j<N-1;j++){
+    //                randNumber = rand()%100;
+    //                if(randNumber<25)
+    //                    cells[i][j] = -1;
+    //                else if(randNumber>=25 &&randNumber<75)
+    //                    cells[i][j] = 1;
+    //                else{
+    //                    cells[i][j]=0;
+    //                }
+    //            }
+    //        }
+
+
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 
     shuffle (begin(tempCells), end(tempCells), std::default_random_engine(seed));
@@ -80,26 +103,28 @@ void MainWindow::initialisation(){
         cells[i / N][i % N] = tempCells[i];
     }
 
-    matImageColourConversion();
+    if(this->ui->radioButton->isChecked()){
+        matImageColourConversion();
+    }
 }
 
 void MainWindow::matImageColourConversion(){
 
-    matImage = Mat(M,N, CV_8UC3 ,&cells); //CV_16UC1 worked well but didn't show stuff with other intensities, CV_32S works well, will need to try CV_8UC3
+    matImage = Mat(M,N, CV_8UC3); //CV_16UC1 worked well but didn't show stuff with other intensities, CV_32S works well, will need to try CV_8UC3
 
-    for (int i=0; i<M; i++){
-        for(int j=0; j<N; j++){
+    for (int i=0; i<N; i++){
+        for(int j=0; j<M; j++){
 
             //black = shark
             //green = fish
             //white = ocean
 
             if(cells[i][j]<0){
-                cv::Vec3b yellow;
+                Vec3b yellow;
                 yellow[0] = 0;
                 yellow[1] = 0;
                 yellow[2] = 0;
-                matImage.at<cv::Vec3b>(cv::Point(j,i)) = yellow;
+                matImage.at<Vec3b>(Point(i,j)) = yellow;
             }
 
             else if(cells[i][j]>0){
@@ -107,7 +132,7 @@ void MainWindow::matImageColourConversion(){
                 red[0] = 0;
                 red[1] = 255;
                 red[2] = 0;
-                matImage.at<cv::Vec3b>(cv::Point(j,i)) = red;
+                matImage.at<Vec3b>(Point(i,j)) = red;
             }
 
             else if(cells[i][j]==0){
@@ -115,12 +140,10 @@ void MainWindow::matImageColourConversion(){
                 blue[0] = 255;
                 blue[1] = 255;
                 blue[2] = 255;
-                matImage.at<cv::Vec3b>(cv::Point(j,i)) = blue;
+                matImage.at<Vec3b>(Point(i,j)) = blue;
             }
         }
     }
-    QImage image((uchar*)matImage.data, matImage.cols, matImage.rows, matImage.step, QImage::Format_RGB888); //Format_RGB888 or Format_Indexed8
-    ui->label->setPixmap(QPixmap::fromImage(image));
 }
 
 void MainWindow::updateGUI(){
@@ -130,6 +153,12 @@ void MainWindow::updateGUI(){
 
     memcpy(*previousGenerationCells,*cells,sizeof(cells));
 
+    //    for(int i=0; i<M; i++){
+    //        for(int j=0; j<N; j++){
+    //            previousGenerationCells[i][j] = cells[i][j];
+    //        }
+    //    }
+
     for(int i=0; i<M; i++){
         for(int j=0; j<N; j++){
 
@@ -137,6 +166,8 @@ void MainWindow::updateGUI(){
             //            std::random_device rd; // obtain a random number from hardware
             //            std::mt19937 eng(rd()); // seed the generator
             //            std::uniform_int_distribution<> distr(1, 32); // define the range
+
+            int randomNumber = rand() % 32 + 1;
 
             //            for(int n=1; n<33; ++n)
             //                std::cout << distr(eng) << ' '; // generate numbers
@@ -154,15 +185,16 @@ void MainWindow::updateGUI(){
             int sharkBreedingAge = 0;
 
 
-
             if(i==0 || i==M-1 || j==0 || j==N-1){
                 int forSubbingPurposes1;
                 int forSubbingPurposes2;
 
-                int i_tempValueUsedForSubing;
-                int j_tempValueUsedForSubing;
+
 
                 if(i==0 || i==M-1){
+
+                    int i_tempValueUsedForSubing;
+                    int j_tempValueUsedForSubing;
 
                     if(i==0){
                         forSubbingPurposes1 = M-1;
@@ -210,10 +242,28 @@ void MainWindow::updateGUI(){
                             j_tempValueUsedForSubing = 1;
                             break;
                         }
+
+                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>0){
+                            fishCounter++;
+                            if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>=3){
+                                fishBreedingAge++;
+                            }
+                        }
+
+                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<0){
+                            sharkCounter++;
+                            if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<=4){
+                                sharkBreedingAge++;
+                            }
+                        }
                     }
                 }
 
                 else{
+
+                    int i_tempValueUsedForSubing;
+                    int j_tempValueUsedForSubing;
+
                     if(j==0){
                         forSubbingPurposes1 = N-1;
                         forSubbingPurposes2 = 1;
@@ -260,22 +310,21 @@ void MainWindow::updateGUI(){
                             j_tempValueUsedForSubing = forSubbingPurposes2;
                             break;
                         }
+                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>0){
+                            fishCounter++;
+                            if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>=3){
+                                fishBreedingAge++;
+                            }
+                        }
+
+                        if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<0){
+                            sharkCounter++;
+                            if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<=4){
+                                sharkBreedingAge++;
+                            }
+                        }
                     }
 
-                }
-
-                if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>0){
-                    fishCounter++;
-                    if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]>=3){
-                        fishBreedingAge++;
-                    }
-                }
-
-                if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<0){
-                    sharkCounter++;
-                    if(previousGenerationCells[i+i_tempValueUsedForSubing][j+j_tempValueUsedForSubing]<=4){
-                        sharkBreedingAge++;
-                    }
                 }
 
             }
@@ -338,6 +387,13 @@ void MainWindow::updateGUI(){
                 }
             }
 
+            //            if(generationCounter>1){
+            //            qDebug() << "fishCounter:" << fishCounter;
+            //            qDebug() << "sharkCounter:" << sharkCounter;
+            //            qDebug() << "TOTAL:" << fishCounter+sharkCounter;
+            //            qDebug() << "------------------------------------";
+            //}
+
             if(previousGenerationCells[i][j]==0){
 
                 if(fishCounter>=4 && fishBreedingAge>=3 && sharkCounter<4){
@@ -348,11 +404,18 @@ void MainWindow::updateGUI(){
                 }
             }
 
-            else if(previousGenerationCells[i][j]==11){
+            else if(previousGenerationCells[i][j]>0 && previousGenerationCells[i][j]==11){
+//                qDebug() << "Fish die!";
+//                qDebug() << "generationCounter:" << generationCounter;
+//                qDebug() << "previousGenerationCells[i][j]:" << previousGenerationCells[i][j];
+//                qDebug() << "i:" << i;
+//                qDebug() << "j:" << j;
+//                qDebug() <<"------------------------------------";
+
                 cells[i][j] = 0;
             }
 
-            else if(abs(previousGenerationCells[i][j])==21){
+            else if(previousGenerationCells[i][j]<0 && abs(previousGenerationCells[i][j])==21){
                 cells[i][j] = 0;
             }
 
@@ -360,26 +423,36 @@ void MainWindow::updateGUI(){
                 cells[i][j] = 0;
             }
 
-            else if(previousGenerationCells[i][j]>0 && sharkCounter>=5 || fishCounter==8){
+            else if(previousGenerationCells[i][j]>0 && sharkCounter>=5){
                 cells[i][j] = 0;
             }
 
-            //                //For random killing of the shark
-            //                else if(previousGenerationCells[i][j]<0 && distr(eng)==1){
-            //                    cells[i][j] = 0;
-            //                }
+            else if(previousGenerationCells[i][j]>0 && fishCounter==8){
+                cells[i][j] = 0;
+            }
+
+//            //For random killing of the shark
+            else if(previousGenerationCells[i][j]<0 && randomNumber==5){
+                cells[i][j] = 0;
+            }
 
             else if(previousGenerationCells[i][j]>0){
-                cells[i][j] = content+1;
-            }
+//                if(content==10){
+//                    qDebug() << "Generation:" << generationCounter;
+//                    qDebug() << "content:" << content;
+//                }
+                cells[i][j] = (previousGenerationCells[i][j])+1;
+            } //Try adding a breakpoint here and checking the variables ----------------------------------------------
             else if(previousGenerationCells[i][j]<0){
-                cells[i][j] = content-1;
+                cells[i][j] = (previousGenerationCells[i][j])-1;
             }
 
         }
     }
 
-    matImageColourConversion();
+    if(this->ui->radioButton->isChecked()){
+        matImageColourConversion();
+    }
 
     //imwrite("test.jpg",matImage);
 
@@ -388,14 +461,27 @@ void MainWindow::updateGUI(){
 
     //imshow("test2",imread("test.jpg"));
 
-    QImage image((uchar*)matImage.data, matImage.cols, matImage.rows, matImage.step, QImage::Format_RGB888); //Format_RGB888 or Format_Indexed8
-    ui->label->setPixmap(QPixmap::fromImage(image));
+    if(this->ui->radioButton->isChecked()){
+        QImage image((uchar*)matImage.data, matImage.cols, matImage.rows, matImage.step, QImage::Format_RGB888); //Format_RGB888 or Format_Indexed8
+        //ui->label->setPixmap(QPixmap::fromImage(image));
+        ui->label->setPixmap(QPixmap::fromImage(image.scaled(850,800,Qt::KeepAspectRatio,Qt::FastTransformation)));
+
+    }
+    //--------------MAYBE I COULD USE THIS FOR RESIZING-----------------------------------
+   // ui->label->setPixmap(QPixmap::fromImage(image.scaled(400,400,Qt::KeepAspectRatio,Qt::FastTransformation)));
 
     //image.save("X:\\Dropbox\\University Work\\Real Time Programming\\Week 2\\build-GameOfLife-Desktop_Qt_5_5_1_MSVC2012_32bit-Debug\\QImageSAVE.jpg","JPG",-1);
 
-    generationCounter++;
+    if(generationCounter==1000){
+        int timeElapsedInMiliseconds = timer.elapsed();
+        this->ui->lcdNumber_2->display(timeElapsedInMiliseconds);
+    }
 
     this->ui->lcdNumber->display(generationCounter);
+
+    generationCounter++;
+
+
 }
 
 MainWindow::~MainWindow()
