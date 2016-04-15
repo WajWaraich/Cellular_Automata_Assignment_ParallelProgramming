@@ -10,14 +10,7 @@
 #include "opencv2/videoio.hpp"
 
 #include <omp.h>
-
-#include <iostream>
-#include <string>
-#include <QtCore>
-#include <algorithm>    // std::shuffle
-#include <array>        // std::array
-#include <random>       // std::default_random_engine
-#include <chrono>       // std::chrono::system_clock
+#include <mpi.h>
 
 namespace Ui {
 class MainWindow;
@@ -42,8 +35,8 @@ private slots:
 private:
     QTimer* timerControl;
 
-    static const int M = 300; //300 | 700 | 800 | 1400 | 1800
-    static const int N = 302; //400 | 1400 | 850 | 1402 | 1802
+    static const int M = 300;
+    static const int N = 400;
 
     int cells[M][N];
 
@@ -52,6 +45,8 @@ private:
     cv::Mat matImage;
 
     int generationCounter;
+
+    int nprocs ,myid;
 
     Ui::MainWindow *ui;
 

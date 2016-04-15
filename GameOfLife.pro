@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+CONFIG += console
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,6 +19,9 @@ QMAKE_CXXFLAGS_RELEASE *= -O2
 
 SOURCES += main.cpp\
         mainwindow.cpp
+
+INCLUDEPATH += "C:\\Program Files (x86)\\Microsoft SDKs\MPI\\Include"
+LIBS += "C:\\Program Files (x86)\\Microsoft SDKs\\MPI\\Lib\x86\\msmpi.lib"
 
 INCLUDEPATH += C:\\opencv310\\build\\install\\include
 
